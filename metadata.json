@@ -1,0 +1,7 @@
+{
+  "name": "Teevo V2 - TV News Channel",
+  "description": "A modern, responsive online TV-style news website that aggregates live streaming video and real-time data from multiple public/free sources, presented in a clean, TV-broadcast-style layout.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

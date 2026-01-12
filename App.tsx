@@ -7,7 +7,7 @@ import type { Location, Stream, WeatherData, NewsArticle, TravelRoute, Stock, Tr
 import { getLocation } from './services/locationService';
 import { getStreams } from './services/streamService';
 import { getWeatherData } from './services/weatherService';
-import { getNewsHeadlines } from './services/newsService';
+import { getNewsHeadlines, getLiveNewsHeadlines } from './services/newsService';
 import { getTravelTimes } from './services/travelService';
 import { getStocks } from './services/stockService';
 import { getTrafficCameras } from './services/trafficService';
@@ -23,14 +23,20 @@ const App: React.FC = () => {
   const [trafficCameras, setTrafficCameras] = useState<TrafficCamera[]>([]);
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [failedStreamIds, setFailedStreamIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     document.documentElement.classList.add('dark'); // Force dark mode
     const fetchData = async () => {
+      // Fetch non-location dependent data immediately
+      setTravelTimes(getTravelTimes());
+      setTrafficCameras(getTrafficCameras());
+      setStocks(getStocks());
+
       try {
         const userLocation = await getLocation();
         setLocation(userLocation);
+        
+        // Fetch all location-dependent data
         const streams = getStreams(userLocation);
         setAllStreams(streams);
         if(streams.length > 0) {
@@ -38,13 +44,18 @@ const App: React.FC = () => {
         }
         const weather = await getWeatherData(userLocation);
         setWeatherData(weather);
+
+        // Fetch live headlines using location
+        const headlines = await getLiveNewsHeadlines(userLocation);
+        setNewsHeadlines(headlines);
+
       } catch (err) {
         if (err instanceof Error) {
             setError(err.message);
         } else {
             setError("An unknown error occurred.");
         }
-        // Fallback to default data
+        // Fallback to default data for location-dependent services
         const streams = getStreams(null);
         setAllStreams(streams);
         if (streams.length > 0) {
@@ -52,45 +63,13 @@ const App: React.FC = () => {
         }
         const weather = await getWeatherData(null);
         setWeatherData(weather);
-      } finally {
-        // Data that doesn't depend on location
+        // Use static headlines as fallback
         setNewsHeadlines(getNewsHeadlines());
-        setTravelTimes(getTravelTimes());
-        setTrafficCameras(getTrafficCameras());
-        setStocks(getStocks());
       }
     };
 
     fetchData();
   }, []);
-
-  const handleStreamError = (failedStreamId: string) => {
-    setFailedStreamIds(prevFailedIds => {
-        if (prevFailedIds.has(failedStreamId)) {
-            return prevFailedIds;
-        }
-
-        const newFailedIds = new Set(prevFailedIds);
-        newFailedIds.add(failedStreamId);
-
-        const currentIndex = allStreams.findIndex(s => s.id === failedStreamId);
-        if (currentIndex === -1) return newFailedIds;
-
-        for (let i = 1; i < allStreams.length; i++) {
-            const nextIndex = (currentIndex + i) % allStreams.length;
-            const potentialNextStream = allStreams[nextIndex];
-            if (!newFailedIds.has(potentialNextStream.id)) {
-                console.log(`Stream ${failedStreamId} failed. Switching to ${potentialNextStream.title}`);
-                setMainStream(potentialNextStream);
-                return newFailedIds;
-            }
-        }
-
-        console.error("All streams have failed.");
-        setError("All available news streams seem to be offline. Please try again later.");
-        return newFailedIds;
-    });
-  };
 
   if (!mainStream || newsHeadlines.length === 0 || stocks.length === 0 || !weatherData || travelTimes.length === 0) {
     return (
@@ -104,14 +83,13 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="bg-black text-gray-100 h-screen font-display flex flex-col overflow-hidden">
+    <div className="bg-black text-gray-100 h-screen font-display flex flex-col overflow-hidden relative">
       <MainContent
         mainStream={mainStream}
         weatherData={weatherData}
         headline={newsHeadlines[0]}
         travelTimes={travelTimes}
         trafficCameras={trafficCameras}
-        onStreamError={handleStreamError}
       />
       <Ticker stocks={stocks} />
       <AlertBar message={ALERT_MESSAGE} />

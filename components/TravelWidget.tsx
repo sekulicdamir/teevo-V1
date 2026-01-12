@@ -48,16 +48,6 @@ export const TravelWidget: React.FC<TravelWidgetProps> = ({ routes, cameras }) =
           </div>
         ))}
       </div>
-      <div className="bg-gray-300 text-black px-2 py-1 flex justify-between items-center font-sans font-bold text-lg border-t-2 border-gray-400">
-        <div className="flex items-baseline">
-            <span className="mr-4 text-sm">OIL</span>
-            <span>59.25</span>
-        </div>
-        <div className="flex items-center">
-            <ArrowUpIcon className="w-5 h-5 text-green-600 mr-1" />
-            <span>0.13</span>
-        </div>
-      </div>
     </div>
   );
 };

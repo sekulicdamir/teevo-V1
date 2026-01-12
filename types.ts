@@ -42,6 +42,7 @@ export type WeatherIconType = 'sun' | 'cloud' | 'rain' | 'snow' | 'wind' | 'clou
 export interface NewsArticle {
   id: string;
   headline: string;
+  subHeadline?: string;
   source: string;
 }
 

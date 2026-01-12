@@ -2,44 +2,44 @@
 import type { Stream, WeatherData, NewsArticle, TravelRoute, Stock, TrafficCamera } from './types';
 import { StreamType } from './types';
 
-// Sample stream data. In a real app, this would come from a backend.
+// Stream data is now sourced from reliable, 24/7 YouTube Live channels.
 export const STREAMS: Stream[] = [
+  {
+    id: '5',
+    title: 'RTCG 1',
+    type: StreamType.NEWS,
+    source: 'https://rtcg-live-open-geo.morescreens.com/RTCG_1_001/playlist.m3u8',
+    isPrimary: true,
+    playerType: 'hls',
+  },
   { 
     id: '1', 
-    title: 'CBC News (Toronto)', 
+    title: 'Sky News', 
     type: StreamType.NEWS, 
-    source: 'https://cbclive.akamaized.net/hls/live/2042858/LS_TO/master.m3u8',
-    isPrimary: true, 
-    playerType: 'hls',
-    latitude: 43.6532, // Toronto
-    longitude: -79.3832 
+    source: 'https://www.youtube.com/embed/9Auq9mYxFEE?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&playsinline=1',
+    isPrimary: false, 
+    playerType: 'iframe',
   },
   { 
     id: '2', 
-    title: 'Sky News (UK)', 
+    title: 'Al Jazeera', 
     type: StreamType.NEWS, 
-    source: 'https://video.news.sky.com/snc/live/v2/event/live-3/master.m3u8',
-    playerType: 'hls',
-    latitude: 51.5072, // London
-    longitude: -0.1276
+    source: 'https://www.youtube.com/embed/gCNeDWCI0vo?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&playsinline=1',
+    playerType: 'iframe',
   },
   {
     id: '3',
-    title: 'Al Jazeera (EN)',
+    title: 'France 24',
     type: StreamType.NEWS,
-    source: 'https://live-hls-web-aje.getaj.net/AJE/01.m3u8',
-    playerType: 'hls',
-    latitude: 25.2854, // Doha
-    longitude: 51.5310
+    source: 'https://www.youtube.com/embed/h3MuIUNCCzI?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&playsinline=1',
+    playerType: 'iframe',
   },
   {
     id: '4',
-    title: 'ABC News (AU)',
+    title: 'Bloomberg TV',
     type: StreamType.NEWS,
-    source: 'https://abc-iview-mediapackagestreams.akamaized.net/out/v1/6e1cc6d25ec0480ea099a5399d73bc4b/index.m3u8',
-    playerType: 'hls',
-    latitude: -33.8688, // Sydney
-    longitude: 151.2093
+    source: 'https://www.youtube.com/embed/dp8PhLsUcFE?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&playsinline=1',
+    playerType: 'iframe',
   }
 ];
 
@@ -63,7 +63,7 @@ export const DEFAULT_WEATHER: WeatherData = {
 
 // Sample news headlines
 export const NEWS_HEADLINES: NewsArticle[] = [
-  { id: 'n1', headline: 'Mattel adds an autistic Barbie to doll line devoted to showcasing diversity and inclusion.', source: 'Reuters' },
+  { id: 'n1', headline: 'Mattel adds an autistic Barbie to doll line devoted to showcasing diversity and inclusion.', subHeadline: 'The new doll is part of the Fashionistas line, which aims to offer kids more diverse representations of beauty.', source: 'Reuters' },
   { id: 'n2', headline: 'New environmental regulations announced by international committee.', source: 'AP' },
 ];
 

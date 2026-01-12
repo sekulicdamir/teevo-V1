@@ -17,7 +17,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, s
   useEffect(() => {
     // The YouTube URL provided in the prompt is not a direct audio stream and cannot be used with the HTML Audio element.
     // A direct, public MP3 stream is used instead to fulfill the music feature request.
-    const musicSource = 'http://stream.lofi.lat/lofi.mp3';
+    // Switched to HTTPS to prevent mixed-content issues that block audio playback on secure pages.
+    const musicSource = 'https://stream.lofi.lat/lofi';
 
     if (!audioRef.current) {
         audioRef.current = new Audio(musicSource);

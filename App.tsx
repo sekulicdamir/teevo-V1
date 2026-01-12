@@ -25,6 +25,7 @@ const App: React.FC = () => {
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [playerVolume, setPlayerVolume] = useState(0.0); // Start muted
 
   const toggleSettings = () => {
     setIsSettingsOpen(prev => !prev);
@@ -112,6 +113,7 @@ const App: React.FC = () => {
         travelTimes={travelTimes}
         trafficCameras={trafficCameras}
         toggleSettings={toggleSettings}
+        playerVolume={playerVolume}
       />
       <Ticker stocks={stocks} />
       <AlertBar message={ALERT_MESSAGE} />
@@ -119,6 +121,8 @@ const App: React.FC = () => {
         isOpen={isSettingsOpen}
         onClose={toggleSettings}
         streams={allStreams}
+        playerVolume={playerVolume}
+        onPlayerVolumeChange={setPlayerVolume}
       />
     </div>
   );

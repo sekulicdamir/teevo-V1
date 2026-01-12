@@ -7,9 +7,10 @@ declare const Hls: any;
 interface VideoPlayerProps {
   stream: Stream;
   isMainPlayer?: boolean;
+  volume?: number;
 }
 
-export const VideoPlayer: React.FC<VideoPlayerProps> = ({ stream, isMainPlayer = false }) => {
+export const VideoPlayer: React.FC<VideoPlayerProps> = ({ stream, isMainPlayer = false, volume }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -22,7 +23,12 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ stream, isMainPlayer =
         hls.loadSource(stream.source);
         hls.attachMedia(video);
         hls.on('hlsMediaAttached', () => {
-          video.muted = true;
+          if (volume !== undefined) {
+            video.volume = volume;
+            video.muted = volume === 0;
+          } else {
+            video.muted = true;
+          }
           video.play().catch(e => {
              console.error("Autoplay was prevented:", e);
           });
@@ -33,7 +39,12 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ stream, isMainPlayer =
       } else if (video.canPlayType('application/vnd.apple.mpegurl')) { // Native HLS support (Safari)
         video.src = stream.source;
         video.addEventListener('loadedmetadata', () => {
-          video.muted = true;
+          if (volume !== undefined) {
+            video.volume = volume;
+            video.muted = volume === 0;
+          } else {
+            video.muted = true;
+          }
           video.play().catch(e => {
             console.error("Autoplay was prevented on native HLS:", e);
           });
@@ -48,6 +59,13 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ stream, isMainPlayer =
     }
   }, [stream]);
 
+  useEffect(() => {
+    if (videoRef.current && stream.playerType === 'hls' && volume !== undefined) {
+      videoRef.current.volume = volume;
+      videoRef.current.muted = volume === 0;
+    }
+  }, [volume, stream.playerType]);
+
   if (stream.playerType === 'hls') {
     return (
       <div className="relative bg-black w-full h-full overflow-hidden flex items-center justify-center">
@@ -56,7 +74,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ stream, isMainPlayer =
           ref={videoRef}
           playsInline
           autoPlay
-          muted
+          muted={volume === 0}
           className={`w-full h-full object-cover ${isMainPlayer ? 'transform scale-[1.15]' : ''}`}
           onClick={(e) => (e.target as HTMLVideoElement).play()}
         />
@@ -65,11 +83,18 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ stream, isMainPlayer =
   }
   
   if (stream.playerType === 'iframe') {
+    let finalStreamSource = stream.source;
+    if (volume !== undefined) {
+      // Remove existing mute param and add the correct one.
+      finalStreamSource = stream.source.replace(/&?mute=[01]/g, '');
+      finalStreamSource += `&mute=${volume === 0 ? 1 : 0}`;
+    }
+
     return (
       <div className={'relative bg-black w-full h-full overflow-hidden'}>
         <iframe
-          key={stream.id}
-          src={stream.source}
+          key={stream.id + finalStreamSource}
+          src={finalStreamSource}
           title={stream.title}
           frameBorder="0"
           allow="autoplay; encrypted-media; picture-in-picture"

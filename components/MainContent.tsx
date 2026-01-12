@@ -12,6 +12,7 @@ interface MainContentProps {
   travelTimes: TravelRoute[];
   trafficCameras: TrafficCamera[];
   toggleSettings: () => void;
+  playerVolume: number;
 }
 
 export const MainContent: React.FC<MainContentProps> = ({
@@ -21,12 +22,13 @@ export const MainContent: React.FC<MainContentProps> = ({
   travelTimes,
   trafficCameras,
   toggleSettings,
+  playerVolume,
 }) => {
   return (
     <div className="flex-grow flex flex-row h-full overflow-hidden">
       <div className="w-2/3 h-full flex flex-col bg-black">
         <div className="w-full aspect-video">
-            <VideoPlayer stream={mainStream} isMainPlayer={true} />
+            <VideoPlayer stream={mainStream} isMainPlayer={true} volume={playerVolume} />
         </div>
         <div className="bg-white text-black flex items-center justify-center py-1">
             <h2 className="text-4xl font-black tracking-tighter">TEEVO</h2>

@@ -7,10 +7,13 @@ interface SettingsPanelProps {
   isOpen: boolean;
   onClose: () => void;
   streams: Stream[];
+  playerVolume: number;
+  onPlayerVolumeChange: (newVolume: number) => void;
 }
 
-export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, streams }) => {
+export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, streams, playerVolume, onPlayerVolumeChange }) => {
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+  const [musicVolume, setMusicVolume] = useState(0.5);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Effect to manage the audio playback based on the toggle state.
@@ -23,6 +26,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, s
     if (!audioRef.current) {
         audioRef.current = new Audio(musicSource);
         audioRef.current.loop = true;
+        audioRef.current.volume = musicVolume;
     }
 
     if (isMusicPlaying) {
@@ -37,6 +41,18 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, s
     };
 
   }, [isMusicPlaying]);
+
+  const handleMusicVolumeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newVolume = parseFloat(event.target.value);
+    setMusicVolume(newVolume);
+    if (audioRef.current) {
+      audioRef.current.volume = newVolume;
+    }
+  };
+
+  const handlePlayerVolumeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    onPlayerVolumeChange(parseFloat(event.target.value));
+  };
 
 
   return (
@@ -109,22 +125,55 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, s
             </div>
           </div>
           
-          {/* Footer with Music Checkbox */}
-          <div className="p-6 border-t border-gray-700 flex-shrink-0">
-              <label htmlFor="music-toggle" className="flex items-center justify-between cursor-pointer">
-                  <span className="text-lg font-semibold text-gray-300">Music</span>
-                  <div className="relative">
-                      <input 
-                        type="checkbox" 
-                        id="music-toggle" 
-                        className="sr-only peer"
-                        checked={isMusicPlaying}
-                        onChange={() => setIsMusicPlaying(prev => !prev)}
-                      />
-                      <div className="block bg-gray-700 w-14 h-8 rounded-full peer-checked:bg-red-600 transition"></div>
-                      <div className="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition peer-checked:translate-x-full"></div>
-                  </div>
-              </label>
+          {/* Footer with Audio Controls */}
+          <div className="p-6 border-t border-gray-700 flex-shrink-0 space-y-6">
+              {/* Player Volume Control */}
+              <div className="space-y-2">
+                  <label htmlFor="player-volume-slider" className="text-lg font-semibold text-gray-300">Player Volume</label>
+                  <input 
+                      id="player-volume-slider"
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.01"
+                      value={playerVolume}
+                      onChange={handlePlayerVolumeChange}
+                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-red-600"
+                  />
+              </div>
+          
+              {/* Music Controls */}
+              <div className="border-t border-gray-700 pt-6 space-y-4">
+                  <label htmlFor="music-toggle" className="flex items-center justify-between cursor-pointer">
+                      <span className="text-lg font-semibold text-gray-300">Music</span>
+                      <div className="relative">
+                          <input 
+                            type="checkbox" 
+                            id="music-toggle" 
+                            className="sr-only peer"
+                            checked={isMusicPlaying}
+                            onChange={() => setIsMusicPlaying(prev => !prev)}
+                          />
+                          <div className="block bg-gray-700 w-14 h-8 rounded-full peer-checked:bg-red-600 transition"></div>
+                          <div className="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition peer-checked:translate-x-full"></div>
+                      </div>
+                  </label>
+                  {isMusicPlaying && (
+                    <div className="space-y-2">
+                        <label htmlFor="music-volume-slider" className="text-lg font-semibold text-gray-300">Music Volume</label>
+                        <input 
+                            id="music-volume-slider"
+                            type="range"
+                            min="0"
+                            max="1"
+                            step="0.01"
+                            value={musicVolume}
+                            onChange={handleMusicVolumeChange}
+                            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-red-600"
+                        />
+                    </div>
+                  )}
+              </div>
           </div>
         </div>
       </div>

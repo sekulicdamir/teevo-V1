@@ -14,7 +14,7 @@ export const getLocation = (): Promise<Location> => {
             // This is a free service with a usage policy. For a production app,
             // a dedicated geocoding service with an API key is recommended.
             // See policy: https://operations.osmfoundation.org/policies/nominatim/
-            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&accept-language=en`);
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
             
             if (!response.ok) {
               throw new Error(`Reverse geocoding failed with status: ${response.status}`);

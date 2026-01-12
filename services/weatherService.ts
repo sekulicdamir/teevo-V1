@@ -43,8 +43,12 @@ export const getWeatherData = async (location: Location | null): Promise<Weather
   // Using Open-Meteo API, which is free and requires no API key.
   const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,apparent_temperature,weather_code&daily=weather_code,temperature_2m_max&timezone=auto&forecast_days=5`;
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000); // 8-second timeout
+
   try {
-    const response = await fetch(apiUrl);
+    const response = await fetch(apiUrl, { signal: controller.signal });
+    clearTimeout(timeoutId);
     if (!response.ok) {
         throw new Error(`Weather API failed with status: ${response.status}`);
     }
@@ -76,6 +80,7 @@ export const getWeatherData = async (location: Location | null): Promise<Weather
     return weatherData;
 
   } catch (error) {
+    clearTimeout(timeoutId);
     console.error("Failed to fetch live weather data:", error);
     // Fallback to default data if the API call fails
     return {

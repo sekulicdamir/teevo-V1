@@ -3,6 +3,7 @@ import type { Stream, WeatherData, NewsArticle, TravelRoute, Stock, TrafficCamer
 import { StreamType } from './types';
 
 // Stream data is now sourced from reliable, 24/7 YouTube Live channels.
+// The primary stream is set to a reliable YouTube source to prevent player failure.
 export const STREAMS: Stream[] = [
   {
     id: '5',
@@ -61,10 +62,14 @@ export const DEFAULT_WEATHER: WeatherData = {
 };
 
 
-// Sample news headlines
+// Fallback message if the live news feed fails.
 export const NEWS_HEADLINES: NewsArticle[] = [
-  { id: 'n1', headline: 'Mattel adds an autistic Barbie to doll line devoted to showcasing diversity and inclusion.', subHeadline: 'The new doll is part of the Fashionistas line, which aims to offer kids more diverse representations of beauty.', source: 'Reuters' },
-  { id: 'n2', headline: 'New environmental regulations announced by international committee.', source: 'AP' },
+  { 
+    id: 'fallback-1', 
+    headline: 'Could Not Load Live News Feed', 
+    subHeadline: 'The news source may be temporarily unavailable. Please try again later.', 
+    source: 'System' 
+  },
 ];
 
 export const TRAVEL_TIMES: TravelRoute[] = [

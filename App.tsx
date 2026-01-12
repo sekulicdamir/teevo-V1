@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { MainContent } from './components/MainContent';
 import { Ticker } from './components/Ticker';
 import { AlertBar } from './components/AlertBar';
+import { SettingsPanel } from './components/SettingsPanel';
 import type { Location, Stream, WeatherData, NewsArticle, TravelRoute, Stock, TrafficCamera } from './types';
 import { getLocation } from './services/locationService';
 import { getStreams } from './services/streamService';
@@ -23,6 +24,11 @@ const App: React.FC = () => {
   const [trafficCameras, setTrafficCameras] = useState<TrafficCamera[]>([]);
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  const toggleSettings = () => {
+    setIsSettingsOpen(prev => !prev);
+  };
 
   useEffect(() => {
     document.documentElement.classList.add('dark'); // Force dark mode
@@ -45,7 +51,7 @@ const App: React.FC = () => {
         const weather = await getWeatherData(userLocation);
         setWeatherData(weather);
 
-        // Fetch live headlines using location
+        // Fetch initial live headlines using location
         const headlines = await getLiveNewsHeadlines(userLocation);
         setNewsHeadlines(headlines);
 
@@ -71,6 +77,21 @@ const App: React.FC = () => {
     fetchData();
   }, []);
 
+  // Effect for refreshing headlines every 3 minutes once location is available
+  useEffect(() => {
+    if (!location) return;
+
+    const fetchLatestHeadlines = async () => {
+        console.log('Refreshing headlines...');
+        const headlines = await getLiveNewsHeadlines(location);
+        setNewsHeadlines(headlines);
+    };
+
+    const intervalId = setInterval(fetchLatestHeadlines, 3 * 60 * 1000); // 3 minutes
+
+    return () => clearInterval(intervalId);
+  }, [location]);
+
   if (!mainStream || newsHeadlines.length === 0 || stocks.length === 0 || !weatherData || travelTimes.length === 0) {
     return (
         <div className="bg-black text-white flex items-center justify-center h-screen">
@@ -87,12 +108,18 @@ const App: React.FC = () => {
       <MainContent
         mainStream={mainStream}
         weatherData={weatherData}
-        headline={newsHeadlines[0]}
+        headlines={newsHeadlines}
         travelTimes={travelTimes}
         trafficCameras={trafficCameras}
+        toggleSettings={toggleSettings}
       />
       <Ticker stocks={stocks} />
       <AlertBar message={ALERT_MESSAGE} />
+      <SettingsPanel 
+        isOpen={isSettingsOpen}
+        onClose={toggleSettings}
+        streams={allStreams}
+      />
     </div>
   );
 };

@@ -8,17 +8,19 @@ import type { Stream, WeatherData, NewsArticle, TravelRoute, TrafficCamera } fro
 interface MainContentProps {
   mainStream: Stream;
   weatherData: WeatherData | null;
-  headline: NewsArticle;
+  headlines: NewsArticle[];
   travelTimes: TravelRoute[];
   trafficCameras: TrafficCamera[];
+  toggleSettings: () => void;
 }
 
 export const MainContent: React.FC<MainContentProps> = ({
   mainStream,
   weatherData,
-  headline,
+  headlines,
   travelTimes,
   trafficCameras,
+  toggleSettings,
 }) => {
   return (
     <div className="flex-grow flex flex-row h-full overflow-hidden">
@@ -29,12 +31,19 @@ export const MainContent: React.FC<MainContentProps> = ({
         <div className="bg-white text-black flex items-center justify-center py-1">
             <h2 className="text-4xl font-black tracking-tighter">TEEVO</h2>
         </div>
-        <div className="w-full flex-grow flex items-center justify-start p-4">
-            <HeadlineOverlay headline={headline} />
+        <div className="w-full flex-grow flex flex-col p-4 overflow-hidden">
+            <div className="flex-grow">
+              <HeadlineOverlay headlines={headlines} />
+            </div>
         </div>
       </div>
       <div className="w-1/3 h-full">
-        <SidePanel weatherData={weatherData} travelTimes={travelTimes} trafficCameras={trafficCameras} />
+        <SidePanel 
+          weatherData={weatherData} 
+          travelTimes={travelTimes} 
+          trafficCameras={trafficCameras}
+          toggleSettings={toggleSettings} 
+        />
       </div>
     </div>
   );

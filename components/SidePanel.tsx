@@ -8,12 +8,13 @@ interface SidePanelProps {
   weatherData: WeatherData | null;
   travelTimes: TravelRoute[];
   trafficCameras: TrafficCamera[];
+  toggleSettings: () => void;
 }
 
-export const SidePanel: React.FC<SidePanelProps> = ({ weatherData, travelTimes, trafficCameras }) => {
+export const SidePanel: React.FC<SidePanelProps> = ({ weatherData, travelTimes, trafficCameras, toggleSettings }) => {
   return (
     <div className="h-full flex flex-col">
-      {weatherData && <WeatherWidget data={weatherData} />}
+      {weatherData && <WeatherWidget data={weatherData} toggleSettings={toggleSettings} />}
       <TravelWidget routes={travelTimes} cameras={trafficCameras} />
     </div>
   );

@@ -5,6 +5,7 @@ import { SunIcon, CloudIcon, RainIcon, SnowIcon, SettingsIcon } from './Icons';
 
 interface WeatherWidgetProps {
   data: WeatherData;
+  toggleSettings: () => void;
 }
 
 const WeatherIcon: React.FC<{ type: WeatherIconType, className?: string }> = ({ type, className = 'w-8 h-8' }) => {
@@ -25,7 +26,7 @@ const WeatherIcon: React.FC<{ type: WeatherIconType, className?: string }> = ({ 
 };
 
 
-export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ data }) => {
+export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ data, toggleSettings }) => {
   const [date, setDate] = useState(new Date());
 
   useEffect(() => {
@@ -45,7 +46,7 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ data }) => {
             TEEVO
         </div>
         <div className="text-lg font-bold text-right">{dayMonth.toUpperCase()}</div>
-        <button className="p-1" aria-label="Settings">
+        <button className="p-1" aria-label="Settings" onClick={toggleSettings}>
             <SettingsIcon className="w-8 h-8 text-white" />
         </button>
       </div>

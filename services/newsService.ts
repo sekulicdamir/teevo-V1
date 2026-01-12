@@ -1,7 +1,7 @@
 
-import { GoogleGenAI } from '@google/genai';
 import type { NewsArticle, Location } from '../types';
 import { NEWS_HEADLINES } from '../constants';
+import { translateNews } from './translationService';
 
 // This is a mock service. A real app would fetch this from a news API.
 export const getNewsHeadlines = (): NewsArticle[] => {
@@ -24,73 +24,88 @@ function stripHtmlAndTruncate(html: string, maxLength: number = 150): string {
 }
 
 /**
- * Fetches live local news headlines by first finding a relevant RSS feed using Gemini
- * and then parsing that feed.
- * @param location The user's location.
+ * Fetches live local news headlines by parsing a specified RSS feed.
+ * @param location The user's location (currently unused but kept for API consistency).
  * @returns A promise that resolves to an array of NewsArticle objects.
  */
 export const getLiveNewsHeadlines = async (location: Location | null): Promise<NewsArticle[]> => {
-    if (!location || !process.env.API_KEY) {
-        console.warn('Location or API Key not available, using static news.');
-        return NEWS_HEADLINES;
-    }
+    const rssUrl = 'https://balkaninsight.com/category/bi/montenegro/feed';
+    console.log(`Using static RSS Feed: ${rssUrl}`);
     
     try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
-        // 1. Use Gemini to find a relevant RSS feed URL
-        const prompt = `Find a free, public RSS feed URL for local news in ${location.city}, ${location.country}. The language should be appropriate for that country. Return only the single, most relevant URL and nothing else.`;
-        const findFeedResponse = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
-            contents: prompt,
-            config: {
-                tools: [{googleSearch: {}}]
-            }
-        });
+        // Fetch the RSS feed using a CORS proxy with a timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+        const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(rssUrl)}`;
+        const feedResponse = await fetch(proxyUrl, { signal: controller.signal });
+        clearTimeout(timeoutId);
         
-        const responseText = findFeedResponse.text?.trim();
-        if (!responseText) {
-            throw new Error('Gemini did not return a feed URL.');
-        }
-
-        // Extract URL from response, as it might contain extra text
-        const urlMatch = responseText.match(/(https?:\/\/[^\s]+)/);
-        if (!urlMatch || !urlMatch[0]) {
-            throw new Error('Could not extract a valid URL from Gemini response.');
-        }
-        const rssUrl = urlMatch[0];
-        console.log(`Found RSS Feed for ${location.city}: ${rssUrl}`);
-
-        // 2. Fetch the RSS feed using a CORS proxy
-        // Using allorigins.win as a reliable CORS proxy
-        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(rssUrl)}`;
-        const feedResponse = await fetch(proxyUrl);
         if (!feedResponse.ok) {
             throw new Error(`Failed to fetch RSS feed with status: ${feedResponse.status}`);
         }
         const xmlText = await feedResponse.text();
 
-        // 3. Parse the XML feed
+        // Parse the XML feed
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
-        const items = xmlDoc.querySelectorAll('item');
+        
+        const parserError = xmlDoc.querySelector('parsererror');
+        if (parserError) {
+            console.error('XML Parsing Error:', parserError.textContent);
+            throw new Error('Failed to parse the news feed XML.');
+        }
+        
+        let items = xmlDoc.querySelectorAll('item'); // For RSS
+        if (items.length === 0) {
+            items = xmlDoc.querySelectorAll('entry'); // For Atom
+        }
 
         if (items.length === 0) {
-            throw new Error('No <item> tags found in the RSS feed.');
+            throw new Error('No <item> or <entry> tags found in the news feed.');
         }
 
         const articles: NewsArticle[] = Array.from(items).slice(0, 10).map((item, index) => {
             const title = item.querySelector('title')?.textContent || 'No Title';
-            const description = item.querySelector('description')?.textContent || '';
-            const link = item.querySelector('link')?.textContent || '#';
             
+            const description = item.querySelector('description')?.textContent 
+                              || item.querySelector('summary')?.textContent 
+                              || item.querySelector('content')?.textContent 
+                              || '';
+            
+            let link = item.querySelector('link')?.textContent;
+            if (!link) {
+                const linkNode = item.querySelector('link');
+                if(linkNode && linkNode.hasAttribute('href')) {
+                    link = linkNode.getAttribute('href');
+                }
+            }
+            link = link || '#';
+            
+            let sourceHost = 'Unknown Source';
+            try {
+                if (link && link.startsWith('http')) {
+                    sourceHost = new URL(link).hostname;
+                }
+            } catch (e) {
+                console.warn(`Could not parse link URL: ${link}`);
+            }
+
             return {
                 id: `live-${index}`,
                 headline: title,
                 subHeadline: stripHtmlAndTruncate(description),
-                source: new URL(link).hostname,
+                source: sourceHost,
             };
         });
+        
+        if (articles.length === 0) {
+             throw new Error('Could not extract any articles from the feed.');
+        }
+
+        if (location?.country) {
+            console.log(`Translating news for country code: ${location.country}`);
+            return await translateNews(articles, location.country);
+        }
 
         return articles;
 
